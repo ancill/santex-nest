@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 services:
   app:
@@ -6,11 +6,13 @@ services:
     ports:
       - '3000:3000'
     environment:
+      - NODE_ENV=production
+      - PORT=3000
       - DB_HOST=postgres
-      - DB_PORT=5432
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=football_data
+      - FOOTBALL_API_TOKEN=your_token_here
     depends_on:
       - postgres
 
@@ -23,7 +25,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=football_data
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
+  postgres-data:

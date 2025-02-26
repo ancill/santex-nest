@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 import { Competition } from './entities/competition.entity';
 import { Team } from './entities/team.entity';
 import { Player } from './entities/player.entity';
@@ -11,6 +12,7 @@ import { StatusController } from './controllers/status.controller';
 
 @Module({
   imports: [
+    ConfigModule,
     TypeOrmModule.forFeature([Competition, Team, Player, Coach]),
   ],
   providers: [

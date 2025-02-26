@@ -1,0 +1,50 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Coach {
+  dateOfBirth: String
+  id: ID!
+  name: String!
+  nationality: String
+  team: Team!
+}
+
+type Competition {
+  areaName: String!
+  code: String!
+  id: ID!
+  name: String!
+  teams: [Team!]!
+}
+
+type Mutation {
+  importLeague(leagueCode: String!): Competition!
+}
+
+type Player {
+  dateOfBirth: String
+  id: ID!
+  name: String!
+  nationality: String
+  position: String
+  team: Team!
+}
+
+type Query {
+  coaches(leagueCode: String!, teamName: String): [Coach!]!
+  players(leagueCode: String!, teamName: String): [Player!]!
+  team(name: String!): Team!
+}
+
+type Team {
+  address: String
+  areaName: String
+  coaches: [Coach!]
+  competitions: [Competition!]
+  id: ID!
+  name: String!
+  players: [Player!]
+  shortName: String
+  tla: String
+}

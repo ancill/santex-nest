@@ -9,6 +9,8 @@ import { FootballDataService } from './services/football-data.service';
 import { ImportStatusService } from './services/import-status.service';
 import { CompetitionResolver, TeamResolver, PlayerResolver, CoachResolver } from './resolvers/football.resolver';
 import { StatusController } from './controllers/status.controller';
+import { FootballController } from './controllers/football.controller';
+import { FootballService } from './services/football.service';
 
 @Module({
   imports: [
@@ -22,7 +24,9 @@ import { StatusController } from './controllers/status.controller';
     TeamResolver,
     PlayerResolver,
     CoachResolver,
+    FootballService,
   ],
-  controllers: [StatusController],
+  controllers: [FootballController, StatusController],
+  exports: [FootballService],
 })
 export class FootballModule {} 

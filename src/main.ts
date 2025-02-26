@@ -1,20 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { GraphQLSchemaHost } from '@nestjs/graphql';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
-  
-  // Configure longer timeout for HTTP requests
-  app.use((req, res, next) => {
-    res.setTimeout(300000); // 5 minutes
-    next();
-  });
-  
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  app.enableCors();
+  await app.listen(3000);
 }
 bootstrap();

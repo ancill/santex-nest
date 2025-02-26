@@ -1,16 +1,12 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { join } from 'path';
-import { ConfigModule } from '@nestjs/config';
 import { FootballModule } from './football/football.module';
+import { join } from 'path';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true, // Makes ConfigModule available throughout the app
-    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
@@ -23,17 +19,7 @@ import { FootballModule } from './football/football.module';
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
-      sortSchema: true,
-      playground: {
-        settings: {
-          'request.credentials': 'same-origin',
-        },
-      },
-      debug: true, // Enable debug mode
-      context: ({ req, res }) => ({ req, res }),
-      introspection: true,
-      installSubscriptionHandlers: true,
+      autoSchemaFile: true,
     }),
     FootballModule,
   ],

@@ -240,7 +240,11 @@ export class FootballDataService {
             relations: ['players', 'coaches'],
           });
           
-          this.logger.log(`Team ${teamData.name} now has ${updatedTeam.players?.length || 0} players and ${updatedTeam.coaches?.length || 0} coaches`);
+          if (updatedTeam) {
+            this.logger.log(`Team ${teamData.name} now has ${updatedTeam.players?.length || 0} players and ${updatedTeam.coaches?.length || 0} coaches`);
+          } else {
+            this.logger.log(`Could not reload team ${teamData.name} after update`);
+          }
           
         } catch (error) {
           this.logger.error(`Error processing squad for team ${teamData.name}: ${error.message}`);
@@ -259,6 +263,9 @@ export class FootballDataService {
       });
       
       this.importStatusService.setImportComplete();
+      if (!fullCompetition) {
+        throw new Error(`Could not find competition after import: ${leagueCode}`);
+      }
       return fullCompetition;
     } catch (error) {
       this.logger.error(`Error importing league ${leagueCode}: ${error.message}`);

@@ -14,18 +14,18 @@ export class Player {
   name: string;
 
   @Column({ nullable: true })
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   position: string;
 
-  @Column({ nullable: true })
-  @Field({ nullable: true })
-  dateOfBirth: string;
+  @Column({ nullable: true, type: 'varchar' })
+  @Field(() => String, { nullable: true })
+  dateOfBirth: string | null;
 
   @Column({ nullable: true })
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   nationality: string;
 
-  @ManyToOne(() => Team, team => team.players)
-  @Field(() => Team)
+  @ManyToOne(() => Team, team => team.players, { nullable: true })
+  @Field(() => Team, { nullable: true })
   team: Team;
 } 

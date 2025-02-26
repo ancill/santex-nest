@@ -28,7 +28,7 @@ type Player {
   name: String!
   nationality: String
   position: String
-  team: Team!
+  team: Team
 }
 
 type Query {

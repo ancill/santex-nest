@@ -14,11 +14,11 @@ export class Coach {
   name: string;
 
   @Column({ nullable: true, type: 'varchar' })
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   dateOfBirth: string | null;
 
   @Column({ nullable: true })
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   nationality: string;
 
   @ManyToOne(() => Team, team => team.coaches)

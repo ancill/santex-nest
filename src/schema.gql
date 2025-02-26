@@ -7,7 +7,7 @@ type Coach {
   id: ID!
   name: String!
   nationality: String
-  team: Team!
+  team: Team
 }
 
 type Competition {

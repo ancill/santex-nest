@@ -124,14 +124,14 @@ export class CoachResolver {
   ) {
     const competition = await this.competitionRepository.findOne({
       where: { code: leagueCode },
-      relations: ['teams', 'teams.coaches'],
+      relations: ['teams'],
     });
     
     if (!competition) {
       throw new NotFoundException(`League with code ${leagueCode} not found`);
     }
     
-  let coaches: Coach[] = [];
+    let coaches: Coach[] = [];
     for (const team of competition.teams) {
       if (!teamName || team.name === teamName) {
         const teamWithCoaches = await this.teamRepository.findOne({
@@ -139,9 +139,19 @@ export class CoachResolver {
           relations: ['coaches'],
         });
         if (teamWithCoaches?.coaches) {
-          coaches.push(...teamWithCoaches.coaches);
+          coaches = [...coaches, ...teamWithCoaches.coaches];
         }
       }
+    }
+    
+    // If we still don't find any coaches, let's directly query them
+    if (coaches.length === 0) {
+      coaches = await this.coachRepository.find({
+        relations: ['team'],
+        where: teamName 
+          ? { team: { name: teamName } }
+          : { team: { competitions: { code: leagueCode } } }
+      });
     }
     
     return coaches;

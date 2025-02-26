@@ -12,7 +12,7 @@ import { ImportStatusService } from './import-status.service';
 export class FootballDataService {
   private readonly API_URL = 'https://api.football-data.org/v4';
   private readonly API_TOKEN = '0f1bb41149314c38adb92373442909f0';
-  private readonly REQUEST_DELAY = 6000; // 6 seconds to respect API rate limits
+  private readonly REQUEST_DELAY = 10000; // Increase from 6000 to 10000 ms
   private readonly logger = new Logger(FootballDataService.name);
   
   constructor(
@@ -53,12 +53,31 @@ export class FootballDataService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  private async requestWithRetry(endpoint: string, retryCount = 0, maxRetries = 3): Promise<any> {
+    try {
+      return await this.request(endpoint);
+    } catch (error) {
+      // If we hit a rate limit (429)
+      if (error?.response?.status === 429 && retryCount < maxRetries) {
+        // Extract wait time from error message or use exponential backoff
+        const waitTimeMatch = error.message.match(/Wait (\d+) seconds/);
+        const waitTime = waitTimeMatch ? parseInt(waitTimeMatch[1]) * 1000 : 1000 * Math.pow(2, retryCount);
+        
+        this.logger.log(`Rate limit hit. Waiting ${waitTime/1000} seconds before retry...`);
+        await this.delay(waitTime);
+        
+        return this.requestWithRetry(endpoint, retryCount + 1, maxRetries);
+      }
+      throw error;
+    }
+  }
+
   async importLeague(leagueCode: string): Promise<Competition> {
     this.logger.log(`Importing league with code: ${leagueCode}`);
     
     try {
       // Fetch competition
-      const competitionData = await this.request(`/competitions/${leagueCode}`);
+      const competitionData = await this.requestWithRetry(`/competitions/${leagueCode}`);
       this.logger.log(`Retrieved competition data for ${competitionData.name}`);
       
       // Check if competition already exists
@@ -81,7 +100,7 @@ export class FootballDataService {
       }
 
       // Fetch teams in competition
-      const teamsData = await this.request(`/competitions/${leagueCode}/teams`);
+      const teamsData = await this.requestWithRetry(`/competitions/${leagueCode}/teams`);
       this.logger.log(`Retrieved ${teamsData.teams.length} teams for competition ${competitionData.name}`);
       
       // Initialize status tracking
@@ -130,11 +149,46 @@ export class FootballDataService {
         await this.delay(this.REQUEST_DELAY);
         
         try {
-          const squadData = await this.request(`/teams/${teamData.id}`);
+          const squadData = await this.requestWithRetry(`/teams/${teamData.id}`);
           this.logger.log(`Retrieved squad data for team ${teamData.name}`);
           
-          // Debug the full API response to understand its structure
-          this.logger.debug(`Squad data structure: ${JSON.stringify(squadData, null, 2)}`);
+          // Process coach first - we can see from the logs that the coach info is directly in the team data
+          if (squadData.coach) {
+            this.logger.log(`Processing coach for team ${teamData.name}: ${squadData.coach.name}`);
+            
+            const existingCoach = await this.coachRepository.findOne({
+              where: { name: squadData.coach.name, team: { id: team.id } },
+            });
+            
+            if (!existingCoach) {
+              const coach = this.coachRepository.create({
+                name: squadData.coach.name,
+                dateOfBirth: squadData.coach.dateOfBirth || null,
+                nationality: squadData.coach.nationality || 'Unknown',
+                team,
+              });
+              await this.coachRepository.save(coach);
+              this.logger.log(`Added coach ${squadData.coach.name} to team ${teamData.name}`);
+            }
+          } else {
+            // Create a placeholder coach if none found
+            const placeholderName = `Coach of ${teamData.name}`;
+            
+            const existingCoach = await this.coachRepository.findOne({
+              where: { name: placeholderName, team: { id: team.id } },
+            });
+            
+            if (!existingCoach) {
+              const coach = this.coachRepository.create({
+                name: placeholderName,
+                dateOfBirth: null,
+                nationality: 'Unknown', 
+                team,
+              });
+              await this.coachRepository.save(coach);
+              this.logger.log(`Added placeholder coach for team ${teamData.name}`);
+            }
+          }
           
           // Check if there are players in the squad
           if (squadData.squad && squadData.squad.length > 0) {
